@@ -1,6 +1,6 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-import httpx
+from pydantic import BaseModel
 
 app = FastAPI(
     title="Suno API Vercel",
@@ -8,36 +8,25 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Definimos la estructura de los datos que va a recibir el POST
+class SongRequest(BaseModel):
+    title: str = "Mi gran canción"
+    style: str = "Rock melódico 80s"
+    prompt: str = "Una letra sobre misterios y tecnología"
+
 @app.get("/")
 @app.get("/api/index")
 def root():
     return {"status": "ONLINE_DIAGNOSTIC_OK", "docs": "/docs"}
 
 @app.post("/api/custom_generate")
-async def generate_song(request: Request):
-    try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON payload")
-
-    prompt = body.get("prompt")
-    tags = body.get("style")
-    title = body.get("title")
-    
-    if not prompt or not tags:
-        raise HTTPException(status_code=400, detail="Faltan los campos 'prompt' (letra/descripción) y 'style' (estilo).")
-
-    # Aquí integrarás la llamada al servicio o API de Suno mediante httpx
-    # Ejemplo conceptual:
-    # async with httpx.AsyncClient() as client:
-    #     response = await client.post("URL_DE_SUNO_O_WRAPPER", json={...})
-    
+async def generate_song(body: SongRequest):
     return JSONResponse({
         "status": "success",
         "message": "Solicitud lista para enviar a Suno",
         "data_received": {
-            "title": title,
-            "style": tags,
-            "prompt": prompt
+            "title": body.title,
+            "style": body.style,
+            "prompt": body.prompt
         }
     })
