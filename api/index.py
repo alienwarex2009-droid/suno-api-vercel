@@ -1,20 +1,18 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import requests  # O httpx para llamadas asíncronas
+import requests
 
 app = FastAPI(title="Warex Music API", version="2.0")
 
-# Configuración de CORS para permitir peticiones desde tu web local y tu futuro dominio
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción podés limitar esto a tu dominio final
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Modelo de datos que recibe exactamente lo que manda tu formulario HTML
 class SongRequest(BaseModel):
     title: str
     style: str
@@ -27,21 +25,36 @@ def read_root():
 @app.post("/api/custom_generate")
 async def custom_generate(song: SongRequest):
     try:
-        # Aquí es donde en el futuro realizaremos la integración o llamada 
-        # hacia la API de generación (Suno u otro wrapper activo) usando los datos:
-        # song.title, song.style, song.prompt
+        # URL de la API de Suno (reemplázala por tu endpoint o wrapper oficial/privado si cambia)
+        SUNO_API_URL = "https://suno-api-vercel-sepia.vercel.app/api/custom_generate"
         
-        # Por ahora, simulamos una respuesta exitosa estructurada para el estudio:
-        return {
-            "success": True,
-            "message": "Parámetros recibidos correctamente en el servidor",
-            "data": {
-                "title": song.title,
-                "style": song.style,
-                "prompt_length": len(song.prompt),
-                "audio_url": "" # Aquí llegará la URL de la música generada próximamente
-            }
+        # Estructura del payload que espera el servicio de Suno
+        payload = {
+            "prompt": song.prompt,
+            "tags": song.style,
+            "title": song.title,
+            "make_instrumental": False
         }
         
+        # Petición al servicio de generación
+        response = requests.post(SUNO_API_URL, json=payload, timeout=30)
+        
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code, 
+                detail=f"Error en el servicio de Suno: {response.text}"
+            )
+            
+        result_data = response.json()
+        
+        # Retornamos la respuesta limpia hacia tu página web
+        return {
+            "success": True,
+            "message": "Petición procesada por Suno exitosamente",
+            "data": result_data
+        }
+        
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Error de conexión con Suno: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
