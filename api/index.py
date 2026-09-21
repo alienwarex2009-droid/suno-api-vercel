@@ -1,7 +1,16 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
-app = FastAPI()
+app = FastAPI(
+    title="Suno API Vercel",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/docs")
 
 @app.post("/api/custom_generate")
 async def generate_song(request: Request):
