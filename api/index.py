@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
+import httpx
 
 app = FastAPI(
     title="Suno API Vercel",
@@ -15,14 +16,28 @@ def root():
 @app.post("/api/custom_generate")
 async def generate_song(request: Request):
     try:
-        data = await request.json()
+        body = await request.json()
     except Exception:
-        data = {}
-        
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    prompt = body.get("prompt")
+    tags = body.get("style")
+    title = body.get("title")
+    
+    if not prompt or not tags:
+        raise HTTPException(status_code=400, detail="Faltan los campos 'prompt' (letra/descripción) y 'style' (estilo).")
+
+    # Aquí integrarás la llamada al servicio o API de Suno mediante httpx
+    # Ejemplo conceptual:
+    # async with httpx.AsyncClient() as client:
+    #     response = await client.post("URL_DE_SUNO_O_WRAPPER", json={...})
+    
     return JSONResponse({
         "status": "success",
-        "title": data.get("title", "Unknown"),
-        "style": data.get("style", "Unknown"),
-        "lyrics": data.get("prompt", "Unknown"),
-        "id": "fake_song_id_123"
+        "message": "Solicitud lista para enviar a Suno",
+        "data_received": {
+            "title": title,
+            "style": tags,
+            "prompt": prompt
+        }
     })
