@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 app = FastAPI()
 
 @app.get("/")
+@app.get("/api/index")
 def read_root():
     return {"message": "¡La API de Suno está funcionando correctamente en Vercel!"}
 
