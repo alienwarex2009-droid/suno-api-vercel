@@ -37,7 +37,7 @@ async def custom_generate(song: SongRequest):
         }
         
         # Petición al servicio de generación
-        response = requests.post(SUNO_API_URL, json=payload, timeout=30)
+        response = requests.post(SUNO_API_URL, json=payload, timeout=60)
         
         if response.status_code != 200:
             raise HTTPException(
